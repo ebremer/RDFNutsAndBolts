@@ -62,6 +62,8 @@ public class RDFNutsAndBolts {
         System.out.println("\n\nGrabbing "+url+" as RDF Turtle (TTL).....");
         RDFNutsAndBolts rdf = new RDFNutsAndBolts();
         Model m = rdf.GetRDF(url);
+        Model n = rdf.GetRDF("http://www.worldcat.org/oclc/41266045");
+        m.add(n);
         
         System.out.println("\n\nList all downloaded triples...........");
         String qs = "select ?s ?p ?o where {?s ?p ?o}";
