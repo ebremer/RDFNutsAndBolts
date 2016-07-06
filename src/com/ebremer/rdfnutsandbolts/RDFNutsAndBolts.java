@@ -9,7 +9,6 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
-import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -31,10 +30,7 @@ public class RDFNutsAndBolts {
      * @param args the command line arguments
      */
     public static void main(String[] args) throws Exception {
-        Dataset dataset = TDBFactory.createDataset("\\tdb");
-        dataset.begin(ReadWrite.WRITE);
-        Model tdb = dataset.getDefaultModel();
-        Model m = ModelFactory.createDefaultModel();
+        
         HttpClient httpClient = new HttpClient();
         httpClient.setFollowRedirects(true);
         httpClient.start();
@@ -44,17 +40,19 @@ public class RDFNutsAndBolts {
         .accept("text/turtle")
         .send();
         System.out.println(response.getContentAsString());
+        
         String ttl = response.getContentAsString();
         httpClient.stop();
         InputStream is = null;
         try {
             is = new ByteArrayInputStream(ttl.getBytes("UTF-8"));
         } catch (UnsupportedEncodingException ex) {
-
+            System.out.println(ex.toString());
         }
+
+        Model m = ModelFactory.createDefaultModel();
         m.read(is,null,"ttl");
-        System.out.println(m.size());
-        
+        System.out.println(m.size());      
         
         String qs = "select ?s ?p ?o where {?s ?p ?o}";
         Query query = QueryFactory.create(qs);
@@ -69,9 +67,21 @@ public class RDFNutsAndBolts {
         UpdateRequest request = UpdateFactory.create();
         request.add(updatestring);
         UpdateAction.execute(request,m);
-        
         m.write(System.out, "TTL");
         
+        Dataset dataset = TDBFactory.createDataset("\\tdb");
+        
+        dataset.addNamedModel("<http://www.ebremer.com/original>", m);
+        Model org = dataset.getNamedModel("<http://www.ebremer.com/original>");
+        System.out.println(org.size());
+        
+        query = QueryFactory.create("select distinct ?g where {graph ?g {?s ?p ?o}}");
+        qe = QueryExecutionFactory.create(query,dataset);
+        results = qe.execSelect();
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            System.out.println("named graph : "+soln.get("g").toString());
+        }
     }
     
 }
