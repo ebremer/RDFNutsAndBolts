@@ -50,11 +50,7 @@ public class RDFNutsAndBolts {
         String ttl = response.getContentAsString();
         httpClient.stop();
         InputStream is = null;
-        try {
-            is = new ByteArrayInputStream(ttl.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException ex) {
-            System.out.println(ex.toString());
-        }
+        is = new ByteArrayInputStream(ttl.getBytes("UTF-8"));
         Model m = ModelFactory.createDefaultModel();
         m.read(is,null,"ttl");
         System.out.println("# of triples downloaded : "+m.size());
