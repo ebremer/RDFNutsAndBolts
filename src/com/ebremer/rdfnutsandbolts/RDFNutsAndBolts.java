@@ -82,7 +82,7 @@ public class RDFNutsAndBolts {
             System.out.println(soln.get("s").toString()+" ==> "+soln.get("title").asLiteral().toString()+"  "+soln.get("date").asLiteral().getValue());
         }
         
-        System.out.println("\n\nLump all objects under one predicate...........");
+        System.out.println("\n\nLump all objects under one dummy predicate...........");
         String updatestring = "insert {?s <http://www.ebremer.com/lump> ?o} where {?s ?p ?o}"; 
         UpdateRequest request = UpdateFactory.create();
         request.add(updatestring);
