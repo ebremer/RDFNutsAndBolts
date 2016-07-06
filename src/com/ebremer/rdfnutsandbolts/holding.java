@@ -26,5 +26,3 @@ public class holding {
 "      <http://www.w3.org/2002/07/owl#sameAs>\n" +
 "              <doi:10.1007/springerreference_38182> , <info:doi/10.1007/springerreference_38182> .";
 }
-
-//dataset.begin(ReadWrite.WRITE);

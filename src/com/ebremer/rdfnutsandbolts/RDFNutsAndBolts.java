@@ -9,6 +9,7 @@ import org.apache.jena.query.QueryExecution;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.query.QuerySolution;
+import org.apache.jena.query.ReadWrite;
 import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -29,9 +30,12 @@ public class RDFNutsAndBolts {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws Exception {
-        String url = "http://dx.doi.org/10.1093/bioinformatics/btk009";
-        System.out.println("\n\nGrabbing "+url+" as RDF Turtle (TTL).....");
+    
+    RDFNutsAndBolts() {
+        
+    }
+    
+    public Model GetRDF(String url) throws Exception {
         HttpClient httpClient = new HttpClient();
         httpClient.setFollowRedirects(true);
         httpClient.start();
@@ -53,7 +57,15 @@ public class RDFNutsAndBolts {
         }
         Model m = ModelFactory.createDefaultModel();
         m.read(is,null,"ttl");
-        System.out.println("# of triples downloaded : "+m.size());      
+        System.out.println("# of triples downloaded : "+m.size());
+        return m;
+    }
+    
+    public static void main(String[] args) throws Exception {
+        String url = "http://dx.doi.org/10.1093/bioinformatics/btk009";
+        System.out.println("\n\nGrabbing "+url+" as RDF Turtle (TTL).....");
+        RDFNutsAndBolts rdf = new RDFNutsAndBolts();
+        Model m = rdf.GetRDF(url);
         
         System.out.println("\n\nList all downloaded triples...........");
         String qs = "select ?s ?p ?o where {?s ?p ?o}";
@@ -83,8 +95,10 @@ public class RDFNutsAndBolts {
         
         System.out.println("\n\nLoad triples into a Jena TDB Quad store as a particular named graph...");
         Dataset dataset = TDBFactory.createDataset("\\tdb");
-        dataset.addNamedModel("<http://www.ebremer.com/original>", m);
-        Model org = dataset.getNamedModel("<http://www.ebremer.com/original>");
+        dataset.begin(ReadWrite.WRITE);
+        dataset.addNamedModel("http://www.ebremer.com/original", m);
+
+        Model org = dataset.getNamedModel("http://www.ebremer.com/original");
         System.out.println(org.size());
         
         query = QueryFactory.create("select distinct ?g where {graph ?g {?s ?p ?o}}");
@@ -94,6 +108,8 @@ public class RDFNutsAndBolts {
             QuerySolution soln = results.nextSolution();
             System.out.println("named graph : "+soln.get("g").toString());
         }
+        dataset.commit();
+        dataset.close();
     }
     
 }
