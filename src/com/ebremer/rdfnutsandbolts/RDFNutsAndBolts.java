@@ -1,9 +1,22 @@
 package com.ebremer.rdfnutsandbolts;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import org.apache.jena.query.Dataset;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.QueryExecution;
+import org.apache.jena.query.QueryExecutionFactory;
+import org.apache.jena.query.QueryFactory;
+import org.apache.jena.query.QuerySolution;
 import org.apache.jena.query.ReadWrite;
+import org.apache.jena.query.ResultSet;
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.tdb.TDBFactory;
+import org.apache.jena.update.UpdateAction;
+import org.apache.jena.update.UpdateFactory;
+import org.apache.jena.update.UpdateRequest;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.jetty.http.HttpMethod;
@@ -21,6 +34,7 @@ public class RDFNutsAndBolts {
         Dataset dataset = TDBFactory.createDataset("\\tdb");
         dataset.begin(ReadWrite.WRITE);
         Model tdb = dataset.getDefaultModel();
+        Model m = ModelFactory.createDefaultModel();
         HttpClient httpClient = new HttpClient();
         httpClient.setFollowRedirects(true);
         httpClient.start();
@@ -30,7 +44,34 @@ public class RDFNutsAndBolts {
         .accept("text/turtle")
         .send();
         System.out.println(response.getContentAsString());
+        String ttl = response.getContentAsString();
         httpClient.stop();
+        InputStream is = null;
+        try {
+            is = new ByteArrayInputStream(ttl.getBytes("UTF-8"));
+        } catch (UnsupportedEncodingException ex) {
+
+        }
+        m.read(is,null,"ttl");
+        System.out.println(m.size());
+        
+        
+        String qs = "select ?s ?p ?o where {?s ?p ?o}";
+        Query query = QueryFactory.create(qs);
+        QueryExecution qe = QueryExecutionFactory.create(query,m);
+        ResultSet results = qe.execSelect();
+        while (results.hasNext()) {
+            QuerySolution soln = results.nextSolution();
+            System.out.println(soln);
+        }
+        
+        String updatestring = "insert {?s <http://www.ebremer.com/lump> ?o} where {?s ?p ?o}"; 
+        UpdateRequest request = UpdateFactory.create();
+        request.add(updatestring);
+        UpdateAction.execute(request,m);
+        
+        m.write(System.out, "TTL");
+        
     }
     
 }
