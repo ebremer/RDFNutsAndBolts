@@ -2,7 +2,6 @@ package com.ebremer.rdfnutsandbolts;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import org.apache.jena.query.Dataset;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryExecution;
@@ -36,6 +35,7 @@ public class RDFNutsAndBolts {
     }
     
     public Model GetRDF(String url) throws Exception {
+        System.out.println("\n\nGrabbing "+url+" as RDF Turtle (TTL).....");
         HttpClient httpClient = new HttpClient();
         httpClient.setFollowRedirects(true);
         httpClient.start();
@@ -58,13 +58,11 @@ public class RDFNutsAndBolts {
     }
     
     public static void main(String[] args) throws Exception {
-        String url = "http://dx.doi.org/10.1093/bioinformatics/btk009";
-        System.out.println("\n\nGrabbing "+url+" as RDF Turtle (TTL).....");
         RDFNutsAndBolts rdf = new RDFNutsAndBolts();
-        Model m = rdf.GetRDF(url);
+        Model m = rdf.GetRDF("http://dx.doi.org/10.1093/bioinformatics/btk009");
         Model n = rdf.GetRDF("http://www.worldcat.org/oclc/41266045");
         m.add(n);
-        
+    
         System.out.println("\n\nList all downloaded triples...........");
         String qs = "select ?s ?p ?o where {?s ?p ?o}";
         Query query = QueryFactory.create(qs);
